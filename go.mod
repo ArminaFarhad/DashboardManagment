@@ -1,4 +1,4 @@
-module github.com/ArminaFarhad/DashboardProj
+module github.com/ArminaFarhad/DashboardManagment
 
 go 1.21.1
 
