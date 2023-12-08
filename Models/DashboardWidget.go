@@ -4,8 +4,11 @@ type DashboardWidget struct {
 	Id          int
 	DashboardId int
 	WidgetId    int
-	PointX      int
-	PointY      int
-	Width       int
-	Height      int
+	position	int
+}
+
+type AddDashboardWidget struct {
+	DashboardId int
+	WidgetId    int
+	position	int
 }
