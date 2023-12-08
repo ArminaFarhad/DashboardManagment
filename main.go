@@ -12,6 +12,7 @@ import (
 )
 
 var (
+	server                   *gin.Engine
 	DashboardController      Controllers.DashboardController
 	DashboardRouteController Routers.DashboardRouteController
 )

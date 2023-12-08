@@ -1,7 +1,6 @@
 package Controllers
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -18,7 +17,19 @@ func NewDashboardController(DB *gorm.DB) DashboardController {
 	return DashboardController{DB}
 }
 
-func (DC *DashboardController) CreateDashboard(ctx *gin.Content) {
+func (DC *DashboardController) GetAllDashboards(ctx *gin.Context) {
+
+	var dashboard []Models.Dashboard
+	result := DC.DB.Find(&dashboard)
+	if result.Error != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"status": "fail", "message": "No post with that title exists"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"status": "success", "data": dashboard})
+}
+
+func (DC *DashboardController) CreateDashboard(ctx *gin.Context) {
 	var payload *Models.CreateDashboard
 
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
@@ -55,7 +66,7 @@ func (DC *DashboardController) GetDashboardWidget(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"status": "success", "data": dashboardWidgets})
 }
 
-func (DC *DashboardController) AddDashboardWidget(ctx *gin.Content) {
+func (DC *DashboardController) AddDashboardWidget(ctx *gin.Context) {
 	var payload []*Models.DashboardWidget
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
 		ctx.JSON(http.StatusBadGateway, gin.H{"status": "fail", "message": err.Error()})
@@ -63,13 +74,17 @@ func (DC *DashboardController) AddDashboardWidget(ctx *gin.Content) {
 	}
 
 	dashboardId := ctx.Param("dashboardId")
-	dashboardWidgets = DC.DB.Delete(&Models.DashboardWidget, "DashboardId = ?", dashboardId)
+	dashboardWidgets := DC.DB.Delete(&Models.DashboardWidget{}, "DashboardId = ?", dashboardId)
+	if dashboardWidgets.Error != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"status": "fail", "message": "No post with that title exists"})
+		return
+	}
 
-	for i := 0; i < len(dashboardWidgets); i++ {
+	for i := 0; i < len(payload); i++ {
 		newWidget := Models.AddDashboardWidget{
 			WidgetId:    payload[i].WidgetId,
 			DashboardId: payload[i].DashboardId,
-			position:    payload[i].position,
+			Position:    payload[i].Position,
 		}
 		result := DC.DB.Create(&newWidget)
 		if result.Error != nil {
@@ -82,15 +97,4 @@ func (DC *DashboardController) AddDashboardWidget(ctx *gin.Content) {
 		}
 	}
 
-}
-
-func returnErrorResponse(response http.ResponseWriter, request *http.Request, errorMesage Models.ErrorResponse) {
-	httpResponse := &Models.ErrorResponse{Code: errorMesage.Code, Message: errorMesage.Message}
-	jsonResponse, err := json.Marshal(httpResponse)
-	if err != nil {
-		panic(err)
-	}
-	response.Header().Set("Content-Type", "application/json")
-	response.WriteHeader(errorMesage.Code)
-	response.Write(jsonResponse)
 }

@@ -1,10 +1,10 @@
-package main
+package Models
 
 type Dashboard struct {
 	Id   int
 	Name string
 }
 
-type GetOrAddDashboard struct {
+type CreateDashboard struct {
 	Name string
 }
